@@ -1,0 +1,33 @@
+use ecommerceDB;
+
+db.products.insertMany([
+  {
+    name: "Smartphone X1",
+    price: 24999,
+    category: "Electronics",
+    variants: [
+      { color: "Black", size: "128GB", stock: 20 },
+      { color: "Blue", size: "256GB", stock: 12 }
+    ]
+  },
+  {
+    name: "Running Shoes Pro",
+    price: 3999,
+    category: "Footwear",
+    variants: [
+      { color: "Red", size: "8", stock: 35 },
+      { color: "Black", size: "9", stock: 18 }
+    ]
+  },
+  {
+    name: "Cotton T-Shirt",
+    price: 799,
+    category: "Clothing",
+    variants: [
+      { color: "White", size: "M", stock: 50 },
+      { color: "Blue", size: "L", stock: 25 },
+      { color: "Black", size: "XL", stock: 10 }
+    ]
+  }
+]);
+
