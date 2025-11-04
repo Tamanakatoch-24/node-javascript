@@ -1,0 +1,72 @@
+import express from "express";
+import cors from "cors";
+
+const app = express();
+app.use(cors());
+
+// Sample product data (API response)
+const products = [
+  { id: 1, name: "Laptop", price: 55000 },
+  { id: 2, name: "Wireless Mouse", price: 1200 },
+  { id: 3, name: "Keyboard", price: 1800 },
+  { id: 4, name: "Smartphone", price: 25000 }
+];
+
+// GET API route
+app.get("/api/products", (req, res) => {
+  res.json(products);
+});
+
+const PORT = 5000;
+app.listen(PORT, () => console.log(`✅ Server running at http://localhost:${PORT}`));
+import { useEffect, useState } from "react";
+import axios from "axios";
+
+const ProductList = () => {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    axios
+      .get("http://localhost:5000/api/products")
+      .then((res) => {
+        setProducts(res.data);
+        setLoading(false);
+      })
+      .catch(() => {
+        setError("Failed to fetch products");
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) return <p>⏳ Loading products...</p>;
+  if (error) return <p>❌ {error}</p>;
+
+  return (
+    <div>
+      <h2>📦 Product List</h2>
+      <ul>
+        {products.map((p) => (
+          <li key={p.id}>
+            {p.name} — ₹{p.price}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};
+
+export default ProductList;
+import ProductList from "./ProductList";
+
+function App() {
+  return (
+    <div className="App">
+      <h1>React + Express API Demo</h1>
+      <ProductList />
+    </div>
+  );
+}
+
+export default App;
