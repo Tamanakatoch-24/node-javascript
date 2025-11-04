@@ -1,0 +1,87 @@
+{
+  "name": "chat-server",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "socket.io": "^4.7.2"
+  }
+}
+cd server
+npm install
+const express = require("express");
+const http = require("http");
+const cors = require("cors");
+const { Server } = require("socket.io");
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+const server = http.createServer(app);
+
+// Allow connections from React dev server (http://localhost:3000)
+const io = new Server(server, {
+  cors: {
+    origin: "http://localhost:3000",
+    methods: ["GET", "POST"]
+  }
+});
+
+// Optional health route
+app.get("/", (req, res) => res.send("Socket.io chat server is running"));
+
+// Simple in-memory user-tracking (socketId -> username)
+const users = {};
+
+io.on("connection", (socket) => {
+  console.log("New client connected:", socket.id);
+
+  // Client emits 'join' with username
+  socket.on("join", (username) => {
+    users[socket.id] = username || "Anonymous";
+    const joinMsg = {
+      system: true,
+      text: `${users[socket.id]} joined the chat`,
+      ts: new Date().toISOString()
+    };
+    // Broadcast to others that someone joined
+    socket.broadcast.emit("message", joinMsg);
+    // Optionally send welcome to the user
+    socket.emit("message", { system: true, text: `Welcome ${users[socket.id]}!`, ts: new Date().toISOString() });
+  });
+
+  // Handle incoming chat messages
+  socket.on("chatMessage", (text) => {
+    const payload = {
+      student_id: undefined,
+      id: socket.id,
+      name: users[socket.id] || "Anonymous",
+      text,
+      ts: new Date().toISOString()
+    };
+    // Broadcast to all (including sender)
+    io.emit("message", payload);
+  });
+
+  socket.on("disconnect", () => {
+    const username = users[socket.id];
+    if (username) {
+      const leaveMsg = {
+        system: true,
+        text: `${username} left the chat`,
+        ts: new Date().toISOString()
+      };
+      socket.broadcast.emit("message", leaveMsg);
+      delete users[socket.id];
+    }
+    console.log("Client disconnected:", socket.id);
+  });
+});
+
+const PORT = process.env.PORT || 5000;
+server.listen(PORT, () => console.log(`Server listening on port ${PORT}`));
